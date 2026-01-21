@@ -1,0 +1,29 @@
+[package]
+name = "claude-bell"
+version = "0.1.0"
+edition = "2021"
+description = "macOS notifications for Claude Code"
+license = "MIT"
+repository = "https://github.com/aaronbassett/claude-bell"
+keywords = ["cli", "notifications", "macos", "claude"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "cb"
+path = "src/main.rs"
+
+[[bin]]
+name = "claude-bell"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+anyhow = "1"
+
+[dev-dependencies]
+tempfile = "3"
+assert_cmd = "2"
+predicates = "3"
