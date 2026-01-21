@@ -1,6 +1,15 @@
+pub mod cli;
+
 use anyhow::Result;
+use clap::Parser;
+
+pub use cli::Cli;
 
 pub fn run() -> Result<()> {
-    println!("Claude Bell v{}", env!("CARGO_PKG_VERSION"));
+    let cli = Cli::parse();
+
+    // For now, just print what we parsed
+    println!("{:?}", cli);
+
     Ok(())
 }
