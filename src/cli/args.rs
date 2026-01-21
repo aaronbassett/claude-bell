@@ -11,6 +11,7 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
 
+    // Content flags
     /// Notification title
     #[arg(short, long)]
     pub title: Option<String>,
@@ -22,6 +23,91 @@ pub struct Cli {
     /// Notification message body
     #[arg(short, long)]
     pub message: Option<String>,
+
+    /// Thumbnail image path or URL
+    #[arg(short, long)]
+    pub image: Option<String>,
+
+    /// App icon (path or @alias)
+    #[arg(long)]
+    pub icon: Option<String>,
+
+    /// Sound (system name, path, or @alias)
+    #[arg(long)]
+    pub sound: Option<String>,
+
+    // Interaction flags
+    /// Comma-separated action buttons
+    #[arg(short, long, value_delimiter = ',')]
+    pub actions: Option<Vec<String>>,
+
+    /// Enable reply input with placeholder
+    #[arg(short, long)]
+    pub reply: Option<String>,
+
+    /// URL to open when notification clicked
+    #[arg(long)]
+    pub url: Option<String>,
+
+    // Behavior flags
+    /// Keep notification on screen until dismissed
+    #[arg(long)]
+    pub persistent: bool,
+
+    /// Override implicit persistence
+    #[arg(long)]
+    pub not_persistent: bool,
+
+    /// Timeout duration (e.g., 30s, 5m)
+    #[arg(long)]
+    pub timeout: Option<String>,
+
+    /// Default value on dismiss/timeout
+    #[arg(long)]
+    pub default: Option<String>,
+
+    /// Value to return on dismiss
+    #[arg(long)]
+    pub on_dismiss: Option<String>,
+
+    /// Value to return on timeout
+    #[arg(long)]
+    pub on_timeout: Option<String>,
+
+    // Input flags
+    /// Process newline-delimited JSON from stdin
+    #[arg(long)]
+    pub batch: bool,
+
+    // Output flags
+    /// JSON output targets (stdout, stderr, logs, response)
+    #[arg(long, value_delimiter = ',')]
+    pub json: Option<Vec<String>>,
+
+    /// Pretty-print JSON output
+    #[arg(long)]
+    pub pretty: bool,
+
+    /// Suppress stdout
+    #[arg(long)]
+    pub quiet: bool,
+
+    /// Suppress all output
+    #[arg(long)]
+    pub silent: bool,
+
+    /// Log level (error, warn, info, debug, trace)
+    #[arg(long, default_value = "warn")]
+    pub log_level: String,
+
+    // Template flags
+    /// Use named template
+    #[arg(long)]
+    pub template: Option<String>,
+
+    /// Template variables (key:value, repeatable)
+    #[arg(long, value_delimiter = ',')]
+    pub var: Option<Vec<String>>,
 }
 
 #[derive(Subcommand, Debug)]
