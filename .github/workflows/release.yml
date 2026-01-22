@@ -1,0 +1,275 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Run CI checks first
+  ci:
+    name: CI Checks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+
+      - name: Run tests
+        run: cargo test
+
+  # Validate plugin configuration
+  validate:
+    name: Validate Plugin Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate marketplace.json
+        run: ./scripts/validate-marketplace.sh
+
+      - name: Validate skills
+        run: ./scripts/validate-skills.sh
+
+      - name: Validate hooks
+        run: ./scripts/validate-hooks.sh
+
+  # Build release binaries for both macOS architectures
+  build:
+    name: Build (${{ matrix.target }})
+    needs: [ci, validate]
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            arch: macos-arm64
+          - target: x86_64-apple-darwin
+            arch: macos-x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare binary
+        run: |
+          mkdir -p dist/${{ matrix.arch }}
+          cp target/${{ matrix.target }}/release/cb dist/${{ matrix.arch }}/cb
+          chmod +x dist/${{ matrix.arch }}/cb
+
+      - name: Generate checksum
+        run: |
+          cd dist/${{ matrix.arch }}
+          shasum -a 256 cb > cb.sha256
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cb-${{ matrix.arch }}
+          path: dist/${{ matrix.arch }}/
+
+  # Create GitHub release with binaries and checksums
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # Package macos-arm64
+          cd artifacts/cb-macos-arm64
+          tar -czvf ../../release-assets/cb-${{ steps.version.outputs.version }}-macos-arm64.tar.gz cb
+          cp cb.sha256 ../../release-assets/cb-${{ steps.version.outputs.version }}-macos-arm64.sha256
+          cd ../..
+
+          # Package macos-x64
+          cd artifacts/cb-macos-x64
+          tar -czvf ../../release-assets/cb-${{ steps.version.outputs.version }}-macos-x64.tar.gz cb
+          cp cb.sha256 ../../release-assets/cb-${{ steps.version.outputs.version }}-macos-x64.sha256
+          cd ../..
+
+          # Create combined checksums file
+          echo "# SHA256 Checksums for claude-bell v${{ steps.version.outputs.version }}" > release-assets/checksums.txt
+          echo "" >> release-assets/checksums.txt
+          echo "## Binaries" >> release-assets/checksums.txt
+          cat artifacts/cb-macos-arm64/cb.sha256 | sed 's/cb/cb-macos-arm64/' >> release-assets/checksums.txt
+          cat artifacts/cb-macos-x64/cb.sha256 | sed 's/cb/cb-macos-x64/' >> release-assets/checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: claude-bell v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            release-assets/cb-${{ steps.version.outputs.version }}-macos-arm64.tar.gz
+            release-assets/cb-${{ steps.version.outputs.version }}-macos-arm64.sha256
+            release-assets/cb-${{ steps.version.outputs.version }}-macos-x64.tar.gz
+            release-assets/cb-${{ steps.version.outputs.version }}-macos-x64.sha256
+            release-assets/checksums.txt
+
+  # Update plugin directories and marketplace.json
+  update-plugin:
+    name: Update Plugin
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Copy binaries to plugin directories
+        run: |
+          # Copy macos-arm64 binary
+          cp artifacts/cb-macos-arm64/cb plugins/core/bin/macos-arm64/cb
+          chmod +x plugins/core/bin/macos-arm64/cb
+
+          # Copy macos-x64 binary
+          cp artifacts/cb-macos-x64/cb plugins/core/bin/macos-x64/cb
+          chmod +x plugins/core/bin/macos-x64/cb
+
+      - name: Update marketplace.json version
+        run: |
+          VERSION=${{ needs.release.outputs.version }}
+
+          # Update version in marketplace.json using jq
+          jq --arg v "$VERSION" '
+            .metadata.version = $v |
+            .plugins |= map(.version = $v)
+          ' .claude-plugin/marketplace.json > .claude-plugin/marketplace.json.tmp
+          mv .claude-plugin/marketplace.json.tmp .claude-plugin/marketplace.json
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add plugins/core/bin/
+          git add .claude-plugin/marketplace.json
+
+          VERSION=${{ needs.release.outputs.version }}
+          git commit -m "chore: update binaries and version to v${VERSION}"
+
+          git push origin HEAD:main
+
+# =============================================================================
+# MANUAL STEPS (Future Automation)
+# =============================================================================
+#
+# The following steps are currently manual but could be automated in the future:
+#
+# 1. PUBLISH TO CRATES.IO
+#    After the release is created, manually publish to crates.io:
+#
+#    ```bash
+#    cargo publish
+#    ```
+#
+#    To automate this, add a job that uses CARGO_REGISTRY_TOKEN secret:
+#
+#    # publish-crates:
+#    #   name: Publish to crates.io
+#    #   needs: release
+#    #   runs-on: ubuntu-latest
+#    #   steps:
+#    #     - uses: actions/checkout@v4
+#    #     - uses: dtolnay/rust-toolchain@stable
+#    #     - run: cargo publish
+#    #       env:
+#    #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+#
+# 2. UPDATE HOMEBREW TAP
+#    If you have a homebrew-tap repository, update the formula:
+#
+#    ```bash
+#    # In your homebrew-tap repo, update the formula with new version and SHA
+#    ```
+#
+#    To automate this, add a job that updates the tap repository:
+#
+#    # update-homebrew:
+#    #   name: Update Homebrew Tap
+#    #   needs: release
+#    #   runs-on: ubuntu-latest
+#    #   steps:
+#    #     - uses: actions/checkout@v4
+#    #       with:
+#    #         repository: aaronbassett/homebrew-tap
+#    #         token: ${{ secrets.TAP_GITHUB_TOKEN }}
+#    #     - name: Update formula
+#    #       run: |
+#    #         # Update version and SHA256 in Formula/claude-bell.rb
+#    #     - name: Commit and push
+#    #       run: |
+#    #         git commit -am "Update claude-bell to v$VERSION"
+#    #         git push
+#
+# =============================================================================
