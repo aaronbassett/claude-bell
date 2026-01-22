@@ -1,0 +1,5 @@
+{
+  "name": "hooks-session",
+  "version": "0.1.0",
+  "description": "Notify on session start and end"
+}

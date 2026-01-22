@@ -1,0 +1,5 @@
+{
+  "name": "hooks-errors",
+  "version": "0.1.0",
+  "description": "Notify on command failures and build errors"
+}

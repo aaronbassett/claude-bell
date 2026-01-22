@@ -1,0 +1,5 @@
+{
+  "name": "hooks-long-running",
+  "version": "0.1.0",
+  "description": "Notify when operations exceed time threshold"
+}

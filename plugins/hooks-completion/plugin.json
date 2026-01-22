@@ -1,0 +1,5 @@
+{
+  "name": "hooks-completion",
+  "version": "0.1.0",
+  "description": "Notify when Claude finishes working"
+}

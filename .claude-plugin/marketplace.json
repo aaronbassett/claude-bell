@@ -1,0 +1,64 @@
+{
+  "name": "claude-bell",
+  "owner": {
+    "name": "Aaron Bassett"
+  },
+  "metadata": {
+    "description": "macOS notifications for Claude Code",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "source": "./plugins/core",
+      "description": "CLI and skill for sending macOS notifications",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": ["notifications", "macos", "alerts"],
+      "strict": false
+    },
+    {
+      "name": "hooks-dangerous",
+      "source": "./plugins/hooks-dangerous",
+      "description": "Prompt for confirmation before destructive operations",
+      "version": "0.1.0",
+      "strict": false
+    },
+    {
+      "name": "hooks-completion",
+      "source": "./plugins/hooks-completion",
+      "description": "Notify when Claude finishes working",
+      "version": "0.1.0",
+      "strict": false
+    },
+    {
+      "name": "hooks-errors",
+      "source": "./plugins/hooks-errors",
+      "description": "Notify on command failures and build errors",
+      "version": "0.1.0",
+      "strict": false
+    },
+    {
+      "name": "hooks-long-running",
+      "source": "./plugins/hooks-long-running",
+      "description": "Notify when operations exceed time threshold",
+      "version": "0.1.0",
+      "strict": false
+    },
+    {
+      "name": "hooks-idle",
+      "source": "./plugins/hooks-idle",
+      "description": "Notify when Claude is waiting for user input",
+      "version": "0.1.0",
+      "strict": false
+    },
+    {
+      "name": "hooks-session",
+      "source": "./plugins/hooks-session",
+      "description": "Notify on session start and end",
+      "version": "0.1.0",
+      "strict": false
+    }
+  ]
+}

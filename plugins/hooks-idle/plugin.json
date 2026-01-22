@@ -1,0 +1,5 @@
+{
+  "name": "hooks-idle",
+  "version": "0.1.0",
+  "description": "Notify when Claude is waiting for user input"
+}
