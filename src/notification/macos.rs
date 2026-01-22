@@ -117,6 +117,7 @@ fn open_url(url: &str) -> Result<(), AppError> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn handle_response(
     response: crate::notification::response::NotificationResponse,
     config: &NotificationConfig,

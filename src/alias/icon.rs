@@ -152,9 +152,10 @@ fn convert_to_icns(input: &std::path::Path, output: &std::path::Path) -> Result<
         })?;
 
     if !status.success() {
-        return Err(AppError::SystemError(format!(
+        return Err(AppError::SystemError(
             "sips command failed to convert image. Supported formats: png, jpg, jpeg, gif, tiff"
-        )));
+                .to_string(),
+        ));
     }
 
     Ok(())

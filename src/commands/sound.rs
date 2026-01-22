@@ -89,8 +89,7 @@ pub fn handle(action: &SoundCommands) -> Result<ExitCode> {
                     return Err(anyhow::anyhow!(
                         "Invalid target: {}. Use: all, files, or aliases",
                         target
-                    )
-                    .into())
+                    ))
                 }
             };
 
@@ -126,15 +125,14 @@ pub fn handle(action: &SoundCommands) -> Result<ExitCode> {
             }
 
             // Confirm
-            if !*yes {
-                if !Confirm::new()
+            if !*yes
+                && !Confirm::new()
                     .with_prompt("Remove these items?")
                     .default(false)
                     .interact()?
-                {
-                    println!("Cancelled.");
-                    return Ok(ExitCode::Success);
-                }
+            {
+                println!("Cancelled.");
+                return Ok(ExitCode::Success);
             }
 
             // Execute cleanup

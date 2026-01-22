@@ -131,7 +131,7 @@ fn setup_templates() -> Result<()> {
     use crate::template::Template;
     use std::collections::HashMap;
 
-    let templates = vec![
+    let templates = [
         ("success", "✓ Success", "Ping", "@success"),
         ("error", "✗ Error", "Basso", "@error"),
         ("warning", "⚠ Warning", "Funk", "@warning"),

@@ -132,7 +132,7 @@ pub fn handle(action: &ConfigCommands) -> Result<ExitCode> {
             } else if let (Some(k), Some(v)) = (key, value) {
                 set_from_key_path(&mut config, k, v)?;
             } else {
-                return Err(anyhow::anyhow!("Either provide key/value or use --json").into());
+                return Err(anyhow::anyhow!("Either provide key/value or use --json"));
             }
 
             save_config(&config, None)?;

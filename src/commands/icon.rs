@@ -96,8 +96,7 @@ pub fn handle(action: &IconCommands) -> Result<ExitCode> {
                     return Err(anyhow::anyhow!(
                         "Invalid target: {}. Use: all, bundles, or aliases",
                         target
-                    )
-                    .into())
+                    ))
                 }
             };
 
@@ -133,15 +132,14 @@ pub fn handle(action: &IconCommands) -> Result<ExitCode> {
             }
 
             // Confirm
-            if !*yes {
-                if !Confirm::new()
+            if !*yes
+                && !Confirm::new()
                     .with_prompt("Remove these items?")
                     .default(false)
                     .interact()?
-                {
-                    println!("Cancelled.");
-                    return Ok(ExitCode::Success);
-                }
+            {
+                println!("Cancelled.");
+                return Ok(ExitCode::Success);
             }
 
             // Execute cleanup
