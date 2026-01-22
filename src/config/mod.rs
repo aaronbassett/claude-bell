@@ -1,8 +1,10 @@
 //! Configuration loading, validation, and management
 
 mod schema;
+mod validation;
 
 pub use schema::{Config, Defaults};
+pub use validation::validate_config;
 
 use crate::error::AppError;
 use std::path::{Path, PathBuf};

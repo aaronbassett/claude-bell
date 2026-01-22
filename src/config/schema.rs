@@ -45,7 +45,7 @@ impl Default for Config {
 }
 
 /// Default notification settings
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Defaults {
     /// Default sound
     pub sound: Option<String>,
@@ -68,4 +68,16 @@ pub struct Defaults {
 
 fn default_log_level() -> String {
     "warn".to_string()
+}
+
+impl Default for Defaults {
+    fn default() -> Self {
+        Self {
+            sound: None,
+            icon: None,
+            json: false,
+            log_level: default_log_level(),
+            persistent: false,
+        }
+    }
 }
