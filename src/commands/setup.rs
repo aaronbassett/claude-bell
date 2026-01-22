@@ -3,12 +3,15 @@
 use crate::config::{save_config, Config};
 use crate::error::ExitCode;
 use anyhow::Result;
-use dialoguer::{Confirm, Input, Select, MultiSelect};
+use dialoguer::{Confirm, Input, MultiSelect, Select};
 
 pub fn run_setup_wizard() -> Result<ExitCode> {
     println!("\n🔔 Welcome to claude-bell setup!\n");
     println!("This wizard will help you configure claude-bell for first use.");
-    println!("Data directory: {}\n", crate::config::config_dir().display());
+    println!(
+        "Data directory: {}\n",
+        crate::config::config_dir().display()
+    );
 
     if !Confirm::new()
         .with_prompt("Continue with setup?")
@@ -115,7 +118,11 @@ fn setup_default_timeout(config: &mut Config) -> Result<()> {
         .allow_empty(true)
         .interact_text()?;
 
-    config.timeout = if timeout.is_empty() { None } else { Some(timeout) };
+    config.timeout = if timeout.is_empty() {
+        None
+    } else {
+        Some(timeout)
+    };
 
     Ok(())
 }

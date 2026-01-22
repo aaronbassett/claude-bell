@@ -71,20 +71,27 @@ pub fn handle(action: &SoundCommands) -> Result<ExitCode> {
             println!("Removed sound alias: @{}", alias);
             Ok(ExitCode::Success)
         }
-        SoundCommands::Prune { target, dry_run, yes } => {
+        SoundCommands::Prune {
+            target,
+            dry_run,
+            yes,
+        } => {
             use crate::alias::sound::{load_sound_aliases, save_sound_aliases};
             use dialoguer::Confirm;
 
             let target = target.as_deref().unwrap_or("all");
 
             let (orphaned_files, dangling_aliases) = match target {
-                "all" => (
-                    find_orphaned_sound_files()?,
-                    find_dangling_sound_aliases()?
-                ),
+                "all" => (find_orphaned_sound_files()?, find_dangling_sound_aliases()?),
                 "files" => (find_orphaned_sound_files()?, vec![]),
                 "aliases" => (vec![], find_dangling_sound_aliases()?),
-                _ => return Err(anyhow::anyhow!("Invalid target: {}. Use: all, files, or aliases", target).into()),
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "Invalid target: {}. Use: all, files, or aliases",
+                        target
+                    )
+                    .into())
+                }
             };
 
             if orphaned_files.is_empty() && dangling_aliases.is_empty() {
@@ -107,8 +114,11 @@ pub fn handle(action: &SoundCommands) -> Result<ExitCode> {
                 }
             }
 
-            println!("\nTotal: {} files, {} aliases",
-                orphaned_files.len(), dangling_aliases.len());
+            println!(
+                "\nTotal: {} files, {} aliases",
+                orphaned_files.len(),
+                dangling_aliases.len()
+            );
 
             if *dry_run {
                 println!("\n(dry run - no changes made)");
@@ -148,7 +158,10 @@ pub fn handle(action: &SoundCommands) -> Result<ExitCode> {
                 save_sound_aliases(&aliases)?;
             }
 
-            println!("\n✓ Removed {} files, {} aliases", removed_files, removed_aliases);
+            println!(
+                "\n✓ Removed {} files, {} aliases",
+                removed_files, removed_aliases
+            );
             Ok(ExitCode::Success)
         }
         SoundCommands::Doctor => {

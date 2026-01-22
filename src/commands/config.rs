@@ -16,7 +16,8 @@ fn set_from_key_path(config: &mut Config, key: &str, value: &str) -> Result<()> 
             config.defaults.icon = Some(value.to_string());
         }
         ["defaults", "persistent"] => {
-            config.defaults.persistent = value.parse()
+            config.defaults.persistent = value
+                .parse()
                 .map_err(|_| anyhow::anyhow!("Invalid boolean value: {}", value))?;
         }
         ["defaults", "log_level"] => {

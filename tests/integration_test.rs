@@ -10,7 +10,9 @@ fn test_full_workflow_template_and_notification() {
     // Create template via JSON
     let create_json = r#"{"name": "test", "title": "Test Title", "subtitle": "Test Subtitle"}"#;
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("template").arg("create").arg("--json")
+    cmd.arg("template")
+        .arg("create")
+        .arg("--json")
         .write_stdin(create_json);
     cmd.assert().success();
 
@@ -36,8 +38,10 @@ fn test_config_workflow() {
 
     // Set config value
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("config").arg("set")
-        .arg("defaults.sound").arg("Ping");
+    cmd.arg("config")
+        .arg("set")
+        .arg("defaults.sound")
+        .arg("Ping");
     cmd.assert().success();
 
     // Show config
@@ -68,8 +72,7 @@ fn test_config_json_workflow() {
     // Set config via JSON
     let json = r#"{"defaults": {"sound": "Basso", "icon": "@info"}}"#;
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("config").arg("set").arg("--json")
-        .write_stdin(json);
+    cmd.arg("config").arg("set").arg("--json").write_stdin(json);
     cmd.assert().success();
 
     // Verify both values set
@@ -88,16 +91,21 @@ fn test_template_update_workflow() {
 
     // Create template
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("template").arg("create")
-        .arg("--name").arg("test")
-        .arg("--title").arg("Original Title");
+    cmd.arg("template")
+        .arg("create")
+        .arg("--name")
+        .arg("test")
+        .arg("--title")
+        .arg("Original Title");
     cmd.assert().success();
 
     // Update template with CLI flags
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("template").arg("update")
+    cmd.arg("template")
+        .arg("update")
         .arg("test")
-        .arg("--title").arg("Updated Title");
+        .arg("--title")
+        .arg("Updated Title");
     cmd.assert().success();
 
     // Verify update
@@ -116,9 +124,9 @@ fn test_sound_prune_dry_run() {
     // Prune dry-run on empty system
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.arg("sound").arg("prune").arg("--dry-run");
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::contains("No cleanup needed").or(predicate::str::contains("dry run")));
+    cmd.assert().success().stdout(
+        predicate::str::contains("No cleanup needed").or(predicate::str::contains("dry run")),
+    );
 }
 
 #[test]
@@ -129,9 +137,9 @@ fn test_icon_prune_dry_run() {
     // Prune dry-run on empty system
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.arg("icon").arg("prune").arg("--dry-run");
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::contains("No cleanup needed").or(predicate::str::contains("dry run")));
+    cmd.assert().success().stdout(
+        predicate::str::contains("No cleanup needed").or(predicate::str::contains("dry run")),
+    );
 }
 
 #[test]
@@ -141,9 +149,12 @@ fn test_template_validate() {
 
     // Create template
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("template").arg("create")
-        .arg("--name").arg("valid")
-        .arg("--title").arg("Valid Template");
+    cmd.arg("template")
+        .arg("create")
+        .arg("--name")
+        .arg("valid")
+        .arg("--title")
+        .arg("Valid Template");
     cmd.assert().success();
 
     // Validate specific template
@@ -181,8 +192,10 @@ fn test_config_reset() {
 
     // Set some config
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("config").arg("set")
-        .arg("defaults.sound").arg("Ping");
+    cmd.arg("config")
+        .arg("set")
+        .arg("defaults.sound")
+        .arg("Ping");
     cmd.assert().success();
 
     // Reset config
@@ -207,9 +220,12 @@ fn test_template_delete() {
 
     // Create template
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.arg("template").arg("create")
-        .arg("--name").arg("todelete")
-        .arg("--title").arg("Delete Me");
+    cmd.arg("template")
+        .arg("create")
+        .arg("--name")
+        .arg("todelete")
+        .arg("--title")
+        .arg("Delete Me");
     cmd.assert().success();
 
     // Delete template

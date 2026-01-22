@@ -8,7 +8,9 @@
 
 use crate::cli::args::Cli;
 use crate::error::{AppError, ExitCode};
-use mac_notification_sys::{get_bundle_identifier_or_default, send_notification as sys_send, set_application, Notification};
+use mac_notification_sys::{
+    get_bundle_identifier_or_default, send_notification as sys_send, set_application, Notification,
+};
 use std::time::Duration;
 
 /// Notification configuration built from CLI arguments
@@ -182,8 +184,9 @@ pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppErro
         // Send with interaction and wait for response
         // Note: mac-notification-sys doesn't support response handling yet
         // This will be fire-and-forget until we implement a proper delegate
-        sys_send(&config.title, subtitle, message, Some(notification_ref))
-            .map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
+        sys_send(&config.title, subtitle, message, Some(notification_ref)).map_err(|e| {
+            AppError::NotificationError(format!("Failed to send notification: {:?}", e))
+        })?;
 
         // For now, print default value since we can't get real responses
         if let Some(ref default_val) = config.default_value {
@@ -193,8 +196,9 @@ pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppErro
         Ok(ExitCode::Success)
     } else {
         // Fire-and-forget
-        sys_send(&config.title, subtitle, message, Some(notification_ref))
-            .map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
+        sys_send(&config.title, subtitle, message, Some(notification_ref)).map_err(|e| {
+            AppError::NotificationError(format!("Failed to send notification: {:?}", e))
+        })?;
 
         // Print default value if specified
         if let Some(ref default_val) = config.default_value {

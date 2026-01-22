@@ -57,7 +57,10 @@ mod tests {
     #[test]
     fn test_detect_source_type() {
         assert_eq!(detect_source_type("/path/to/file.icns"), SourceType::Icns);
-        assert_eq!(detect_source_type("/path/to/App.app"), SourceType::AppBundle);
+        assert_eq!(
+            detect_source_type("/path/to/App.app"),
+            SourceType::AppBundle
+        );
         assert_eq!(detect_source_type("/path/to/file.png"), SourceType::Image);
         assert_eq!(detect_source_type("/path/to/file.jpg"), SourceType::Image);
         assert_eq!(detect_source_type("/path/to/file.jpeg"), SourceType::Image);
@@ -91,8 +94,7 @@ mod tests {
             Ok(_) => assert!(output.exists()),
             Err(e) => {
                 // Expected on non-macOS or if sips fails with fake data
-                assert!(e.to_string().contains("sips") ||
-                        e.to_string().contains("image"));
+                assert!(e.to_string().contains("sips") || e.to_string().contains("image"));
             }
         }
     }
@@ -117,7 +119,8 @@ fn detect_source_type(path: &str) -> SourceType {
 }
 
 fn generate_info_plist(alias: &str) -> String {
-    format!(r#"<?xml version="1.0" encoding="UTF-8"?>
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -128,7 +131,9 @@ fn generate_info_plist(alias: &str) -> String {
     <key>CFBundleIconFile</key>
     <string>icon</string>
 </dict>
-</plist>"#, alias, alias)
+</plist>"#,
+        alias, alias
+    )
 }
 
 fn convert_to_icns(input: &std::path::Path, output: &std::path::Path) -> Result<(), AppError> {
@@ -142,14 +147,14 @@ fn convert_to_icns(input: &std::path::Path, output: &std::path::Path) -> Result<
         .arg("--out")
         .arg(output)
         .status()
-        .map_err(|e| AppError::SystemError(
-            format!("Failed to run sips command: {}. Is this macOS?", e)
-        ))?;
+        .map_err(|e| {
+            AppError::SystemError(format!("Failed to run sips command: {}. Is this macOS?", e))
+        })?;
 
     if !status.success() {
-        return Err(AppError::SystemError(
-            format!("sips command failed to convert image. Supported formats: png, jpg, jpeg, gif, tiff")
-        ));
+        return Err(AppError::SystemError(format!(
+            "sips command failed to convert image. Supported formats: png, jpg, jpeg, gif, tiff"
+        )));
     }
 
     Ok(())

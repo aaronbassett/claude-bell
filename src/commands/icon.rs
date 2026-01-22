@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 
 fn find_orphaned_icon_bundles() -> Result<Vec<PathBuf>> {
-    use crate::alias::icon::{load_icon_aliases, icon_bundles_dir};
+    use crate::alias::icon::{icon_bundles_dir, load_icon_aliases};
 
     let bundles_dir = icon_bundles_dir();
     let aliases = load_icon_aliases()?;
@@ -32,7 +32,7 @@ fn find_orphaned_icon_bundles() -> Result<Vec<PathBuf>> {
 }
 
 fn find_dangling_icon_aliases() -> Result<Vec<String>> {
-    use crate::alias::icon::{load_icon_aliases, icon_bundles_dir};
+    use crate::alias::icon::{icon_bundles_dir, load_icon_aliases};
 
     let aliases = load_icon_aliases()?;
     let bundles_dir = icon_bundles_dir();
@@ -78,20 +78,27 @@ pub fn handle(action: &IconCommands) -> Result<ExitCode> {
             println!("Removed icon alias: @{}", alias);
             Ok(ExitCode::Success)
         }
-        IconCommands::Prune { target, dry_run, yes } => {
+        IconCommands::Prune {
+            target,
+            dry_run,
+            yes,
+        } => {
             use crate::alias::icon::{load_icon_aliases, save_icon_aliases};
             use dialoguer::Confirm;
 
             let target = target.as_deref().unwrap_or("all");
 
             let (orphaned_bundles, dangling_aliases) = match target {
-                "all" => (
-                    find_orphaned_icon_bundles()?,
-                    find_dangling_icon_aliases()?
-                ),
+                "all" => (find_orphaned_icon_bundles()?, find_dangling_icon_aliases()?),
                 "bundles" => (find_orphaned_icon_bundles()?, vec![]),
                 "aliases" => (vec![], find_dangling_icon_aliases()?),
-                _ => return Err(anyhow::anyhow!("Invalid target: {}. Use: all, bundles, or aliases", target).into()),
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "Invalid target: {}. Use: all, bundles, or aliases",
+                        target
+                    )
+                    .into())
+                }
             };
 
             if orphaned_bundles.is_empty() && dangling_aliases.is_empty() {
@@ -114,8 +121,11 @@ pub fn handle(action: &IconCommands) -> Result<ExitCode> {
                 }
             }
 
-            println!("\nTotal: {} bundles, {} aliases",
-                orphaned_bundles.len(), dangling_aliases.len());
+            println!(
+                "\nTotal: {} bundles, {} aliases",
+                orphaned_bundles.len(),
+                dangling_aliases.len()
+            );
 
             if *dry_run {
                 println!("\n(dry run - no changes made)");
@@ -155,7 +165,10 @@ pub fn handle(action: &IconCommands) -> Result<ExitCode> {
                 save_icon_aliases(&aliases)?;
             }
 
-            println!("\n✓ Removed {} bundles, {} aliases", removed_bundles, removed_aliases);
+            println!(
+                "\n✓ Removed {} bundles, {} aliases",
+                removed_bundles, removed_aliases
+            );
             Ok(ExitCode::Success)
         }
         IconCommands::Doctor => {

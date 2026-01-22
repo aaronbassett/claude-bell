@@ -21,8 +21,7 @@ fn test_add_icon_alias_with_icns_file() {
     cmd.assert().success();
 
     // Verify bundle was created
-    let bundle_path = temp.path()
-        .join(".claude-bell/icons/bundles/myicon.app");
+    let bundle_path = temp.path().join(".claude-bell/icons/bundles/myicon.app");
     assert!(bundle_path.exists());
     assert!(bundle_path.join("Contents/Info.plist").exists());
     assert!(bundle_path.join("Contents/Resources/icon.icns").exists());
@@ -45,8 +44,7 @@ fn test_add_icon_alias_with_image_file() {
     cmd.assert().success();
 
     // Verify bundle was created with converted ICNS
-    let bundle_path = temp.path()
-        .join(".claude-bell/icons/bundles/myicon.app");
+    let bundle_path = temp.path().join(".claude-bell/icons/bundles/myicon.app");
     assert!(bundle_path.exists());
     assert!(bundle_path.join("Contents/Resources/icon.icns").exists());
 }
@@ -72,8 +70,7 @@ fn test_add_icon_alias_with_app_bundle() {
     cmd.assert().success();
 
     // Verify reference was stored
-    let bundle_path = temp.path()
-        .join(".claude-bell/icons/bundles/myicon.app");
+    let bundle_path = temp.path().join(".claude-bell/icons/bundles/myicon.app");
     assert!(bundle_path.exists());
 }
 
@@ -86,8 +83,7 @@ fn test_resolve_icon_with_generated_bundle() {
     std::env::set_var("HOME", temp.path());
 
     // Create bundle structure
-    let bundle_path = temp.path()
-        .join(".claude-bell/icons/bundles/test.app");
+    let bundle_path = temp.path().join(".claude-bell/icons/bundles/test.app");
     fs::create_dir_all(&bundle_path).unwrap();
 
     // Add alias

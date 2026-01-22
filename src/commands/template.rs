@@ -12,25 +12,29 @@ fn create_interactive() -> Result<crate::template::Template> {
 
     println!("\n📝 Create New Template\n");
 
-    let name: String = Input::new()
-        .with_prompt("Template name")
-        .interact()?;
+    let name: String = Input::new().with_prompt("Template name").interact()?;
 
-    let title: String = Input::new()
-        .with_prompt("Title (required)")
-        .interact()?;
+    let title: String = Input::new().with_prompt("Title (required)").interact()?;
 
     let subtitle: String = Input::new()
         .with_prompt("Subtitle (optional, press Enter to skip)")
         .allow_empty(true)
         .interact_text()?;
-    let subtitle = if subtitle.is_empty() { None } else { Some(subtitle) };
+    let subtitle = if subtitle.is_empty() {
+        None
+    } else {
+        Some(subtitle)
+    };
 
     let message: String = Input::new()
         .with_prompt("Message (optional)")
         .allow_empty(true)
         .interact_text()?;
-    let message = if message.is_empty() { None } else { Some(message) };
+    let message = if message.is_empty() {
+        None
+    } else {
+        Some(message)
+    };
 
     let sound: String = Input::new()
         .with_prompt("Sound (optional, @alias or path)")
@@ -104,14 +108,22 @@ fn update_interactive(template: &mut crate::template::Template) -> Result<()> {
         .default(template.subtitle.clone().unwrap_or_default())
         .allow_empty(true)
         .interact_text()?;
-    template.subtitle = if subtitle.is_empty() { None } else { Some(subtitle) };
+    template.subtitle = if subtitle.is_empty() {
+        None
+    } else {
+        Some(subtitle)
+    };
 
     let message: String = Input::new()
         .with_prompt("Message")
         .default(template.message.clone().unwrap_or_default())
         .allow_empty(true)
         .interact_text()?;
-    template.message = if message.is_empty() { None } else { Some(message) };
+    template.message = if message.is_empty() {
+        None
+    } else {
+        Some(message)
+    };
 
     let sound: String = Input::new()
         .with_prompt("Sound")
@@ -130,16 +142,23 @@ fn update_interactive(template: &mut crate::template::Template) -> Result<()> {
     let actions_str: String = Input::new()
         .with_prompt("Actions (comma-separated)")
         .default(
-            template.actions.as_ref()
+            template
+                .actions
+                .as_ref()
                 .map(|a| a.join(", "))
-                .unwrap_or_default()
+                .unwrap_or_default(),
         )
         .allow_empty(true)
         .interact_text()?;
     template.actions = if actions_str.is_empty() {
         None
     } else {
-        Some(actions_str.split(',').map(|s| s.trim().to_string()).collect())
+        Some(
+            actions_str
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .collect(),
+        )
     };
 
     let reply: String = Input::new()
@@ -192,8 +211,17 @@ pub fn handle(action: &TemplateCommands) -> Result<ExitCode> {
             Ok(ExitCode::Success)
         }
         TemplateCommands::Create {
-            name, title, subtitle, message, sound, icon,
-            actions, reply, url, persistent, json
+            name,
+            title,
+            subtitle,
+            message,
+            sound,
+            icon,
+            actions,
+            reply,
+            url,
+            persistent,
+            json,
         } => {
             let template = if *json {
                 // Read JSON from stdin
@@ -232,8 +260,17 @@ pub fn handle(action: &TemplateCommands) -> Result<ExitCode> {
             Ok(ExitCode::Success)
         }
         TemplateCommands::Update {
-            name, title, subtitle, message, sound, icon,
-            actions, reply, url, persistent, json
+            name,
+            title,
+            subtitle,
+            message,
+            sound,
+            icon,
+            actions,
+            reply,
+            url,
+            persistent,
+            json,
         } => {
             let mut template = load_template(name)?;
 
@@ -264,7 +301,7 @@ pub fn handle(action: &TemplateCommands) -> Result<ExitCode> {
                     template.actions = Some(
                         a.iter()
                             .filter_map(|v| v.as_str().map(String::from))
-                            .collect()
+                            .collect(),
                     );
                 }
                 if let Some(r) = partial.get("reply").and_then(|v| v.as_str()) {
@@ -276,10 +313,16 @@ pub fn handle(action: &TemplateCommands) -> Result<ExitCode> {
                 if let Some(p) = partial.get("persistent").and_then(|v| v.as_bool()) {
                     template.persistent = Some(p);
                 }
-
-            } else if title.is_some() || subtitle.is_some() || message.is_some() ||
-                      sound.is_some() || icon.is_some() || actions.is_some() ||
-                      reply.is_some() || url.is_some() || persistent.is_some() {
+            } else if title.is_some()
+                || subtitle.is_some()
+                || message.is_some()
+                || sound.is_some()
+                || icon.is_some()
+                || actions.is_some()
+                || reply.is_some()
+                || url.is_some()
+                || persistent.is_some()
+            {
                 // Update from flags (only update specified fields)
                 if let Some(t) = title {
                     template.title = t.clone();
