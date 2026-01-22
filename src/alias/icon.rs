@@ -50,6 +50,38 @@ pub fn save_icon_aliases(aliases: &IconAliases) -> Result<(), AppError> {
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detect_source_type() {
+        assert_eq!(detect_source_type("/path/to/file.icns"), SourceType::Icns);
+        assert_eq!(detect_source_type("/path/to/App.app"), SourceType::AppBundle);
+        assert_eq!(detect_source_type("/path/to/file.png"), SourceType::Image);
+        assert_eq!(detect_source_type("/path/to/file.jpg"), SourceType::Image);
+        assert_eq!(detect_source_type("/path/to/file.jpeg"), SourceType::Image);
+    }
+}
+
+#[derive(Debug, PartialEq)]
+enum SourceType {
+    AppBundle,
+    Icns,
+    Image,
+}
+
+fn detect_source_type(path: &str) -> SourceType {
+    let path_lower = path.to_lowercase();
+    if path_lower.ends_with(".app") {
+        SourceType::AppBundle
+    } else if path_lower.ends_with(".icns") {
+        SourceType::Icns
+    } else {
+        SourceType::Image
+    }
+}
+
 /// Add an icon alias (from app or image path)
 pub fn add_icon_alias(alias: &str, path: &str) -> Result<(), AppError> {
     let mut aliases = load_icon_aliases()?;
