@@ -50,6 +50,9 @@ pub enum AppError {
     #[error("Permission denied: {0}")]
     PermissionDenied(String),
 
+    #[error("System error: {0}")]
+    SystemError(String),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
@@ -68,6 +71,7 @@ impl AppError {
             Self::AliasNotFound(_) => ExitCode::UserError,
             Self::NotificationError(_) => ExitCode::SystemError,
             Self::PermissionDenied(_) => ExitCode::SystemError,
+            Self::SystemError(_) => ExitCode::SystemError,
             Self::Io(_) => ExitCode::SystemError,
             Self::Json(_) => ExitCode::UserError,
         }

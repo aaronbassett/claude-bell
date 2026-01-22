@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(
     name = "claude-bell",
     about = "macOS notifications for Claude Code",
@@ -110,7 +110,7 @@ pub struct Cli {
     pub var: Option<Vec<String>>,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Manage notification templates
     Template {
@@ -138,7 +138,7 @@ pub enum Commands {
     Doctor,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum TemplateCommands {
     /// List all templates
     List,
@@ -159,7 +159,7 @@ pub enum TemplateCommands {
     },
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum SoundCommands {
     /// List sound aliases
     List,
@@ -185,7 +185,7 @@ pub enum SoundCommands {
     Doctor,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum IconCommands {
     /// List icon aliases
     List,
@@ -206,7 +206,7 @@ pub enum IconCommands {
     Doctor,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum ConfigCommands {
     /// Show current configuration
     Show {
