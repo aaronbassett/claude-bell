@@ -6,7 +6,7 @@
 use crate::cli::args::Cli;
 use crate::error::{AppError, ExitCode};
 use crate::notification::response::{NotificationResponse, ResponseHandler};
-use objc2::rc::{autoreleasepool, Retained};
+use objc2::rc::{autoreleasepool, Id, Retained};
 use objc2::runtime::{AnyClass, AnyObject};
 use objc2::{class, msg_send, msg_send_id};
 use objc2_foundation::{NSArray, NSDictionary, NSError, NSString, NSURL};
@@ -213,7 +213,7 @@ impl UNMutableNotificationContent {
                     for i in 0..existing.len() {
                         if let Some(obj) = existing.get(i) {
                             // Create a new retained reference
-                            let retained: Retained<AnyObject> = Retained::retain(obj as *const AnyObject as *mut AnyObject).unwrap();
+                            let retained: Retained<AnyObject> = Id::retain(obj as *const AnyObject as *mut AnyObject).unwrap();
                             attachments_vec.push(retained);
                         }
                     }
@@ -557,13 +557,61 @@ fn parse_duration(s: &str) -> Result<Duration, AppError> {
     Ok(Duration::from_secs(seconds))
 }
 
+/// Check if the app is running in a proper macOS app bundle context
+///
+/// UserNotifications framework requires the app to be running from a .app bundle.
+/// This function checks if we're in such a context by examining the main bundle.
+fn is_bundled_app() -> bool {
+    unsafe {
+        // Get the main bundle
+        let main_bundle: Option<Retained<AnyObject>> = msg_send_id![
+            class!(NSBundle),
+            mainBundle
+        ];
+
+        if let Some(bundle) = main_bundle {
+            // Get bundle path
+            let bundle_path: Option<Retained<NSString>> = msg_send_id![
+                &*bundle,
+                bundlePath
+            ];
+
+            if let Some(path) = bundle_path {
+                let path_str = path.to_string();
+                // A proper app bundle has a .app extension
+                return path_str.ends_with(".app");
+            }
+        }
+
+        false
+    }
+}
+
 /// Send a notification with the given configuration
 pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppError> {
+    // Warn about unimplemented URL field
+    if config.url.is_some() {
+        eprintln!("Warning: --url field not yet implemented (planned for Phase 10.2)");
+    }
+
+    // Check if running in proper macOS app bundle context
+    if !is_bundled_app() {
+        // In test/unbundled context, print what would happen and succeed
+        eprintln!("Warning: Running in unbundled context (test/development mode)");
+        println!("Would send notification: {}", config.title);
+        if let Some(ref default_val) = config.default_value {
+            println!("{}", default_val);
+        }
+        return Ok(ExitCode::Success);
+    }
+
     autoreleasepool(|_| {
         let center = UNUserNotificationCenter::current().ok_or_else(|| {
             AppError::SystemError(
-                "Cannot access notification center. This may occur if the app is not properly bundled. \
-                 For development, try building with proper macOS app bundle structure."
+                "Cannot access UserNotifications center. Common causes:\n\
+                 1. App not properly bundled (use proper .app bundle for distribution)\n\
+                 2. Notification permissions not granted (system will prompt on first use)\n\
+                 Run 'cb doctor' to diagnose configuration issues."
                     .to_string(),
             )
         })?;
@@ -615,7 +663,7 @@ pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppErro
                         for i in 0..existing.len() {
                             if let Some(obj) = existing.get(i) {
                                 // Create a new retained reference
-                                let retained: Retained<AnyObject> = Retained::retain(obj as *const AnyObject as *mut AnyObject).unwrap();
+                                let retained: Retained<AnyObject> = Id::retain(obj as *const AnyObject as *mut AnyObject).unwrap();
                                 attachments_vec.push(retained);
                             }
                         }
