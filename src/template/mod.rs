@@ -1,7 +1,9 @@
 //! Template management and Tera rendering
 
+mod render;
 mod schema;
 
+pub use render::{render_template, RenderedTemplate};
 pub use schema::Template;
 
 use crate::error::AppError;
