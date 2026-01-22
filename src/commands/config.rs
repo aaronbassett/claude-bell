@@ -35,7 +35,7 @@ pub fn handle(action: &ConfigCommands) -> Result<ExitCode> {
             Ok(ExitCode::Success)
         }
         ConfigCommands::Validate { path } => {
-            let config = load_config(path.as_ref().map(|p| std::path::Path::new(p)))?;
+            let config = load_config(path.as_ref().map(std::path::Path::new))?;
             match validate_config(&config) {
                 Ok(()) => {
                     println!("Configuration is valid");

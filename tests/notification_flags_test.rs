@@ -46,24 +46,31 @@ fn test_flags_without_title_show_help() {
 fn test_notification_with_all_content_flags() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args([
-        "-t", "Title",
-        "-s", "Subtitle",
-        "-m", "Message",
-        "--sound", "Ping",
-        "--icon", "@terminal"
+        "-t",
+        "Title",
+        "-s",
+        "Subtitle",
+        "-m",
+        "Message",
+        "--sound",
+        "Ping",
+        "--icon",
+        "@terminal",
     ])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("Would send notification"));
+    .assert()
+    .success()
+    .stdout(predicate::str::contains("Would send notification"));
 }
 
 #[test]
 fn test_short_flags_combined() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.args(["-t", "Title", "-s", "Sub", "-m", "Msg", "-i", "/img.png", "-a", "OK,No", "-r", "Reply"])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("Would send notification"));
+    cmd.args([
+        "-t", "Title", "-s", "Sub", "-m", "Msg", "-i", "/img.png", "-a", "OK,No", "-r", "Reply",
+    ])
+    .assert()
+    .success()
+    .stdout(predicate::str::contains("Would send notification"));
 }
 
 // Tests for subcommands
@@ -88,9 +95,7 @@ fn test_config_show_command() {
 #[test]
 fn test_sound_list_command() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.args(["sound", "list"])
-        .assert()
-        .success();
+    cmd.args(["sound", "list"]).assert().success();
 }
 
 #[test]
@@ -105,7 +110,5 @@ fn test_icon_list_command() {
 #[test]
 fn test_template_list_command() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
-    cmd.args(["template", "list"])
-        .assert()
-        .success();
+    cmd.args(["template", "list"]).assert().success();
 }

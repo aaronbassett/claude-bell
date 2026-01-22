@@ -63,9 +63,9 @@ fn validate_duration(duration: &str) -> Result<(), AppError> {
     }
 
     let (num_str, unit) = duration.split_at(duration.len() - 1);
-    let _num: u64 = num_str.parse().map_err(|_| {
-        AppError::ConfigError(format!("Invalid duration format: {}", duration))
-    })?;
+    let _num: u64 = num_str
+        .parse()
+        .map_err(|_| AppError::ConfigError(format!("Invalid duration format: {}", duration)))?;
 
     match unit {
         "s" | "m" | "h" => Ok(()),

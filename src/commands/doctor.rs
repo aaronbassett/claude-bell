@@ -31,10 +31,11 @@ pub fn handle() -> Result<ExitCode> {
         }
     }
 
+    // has_warnings tracked for potential future use
+    let _ = has_warnings;
+
     if has_errors {
         Ok(ExitCode::SystemError)
-    } else if has_warnings {
-        Ok(ExitCode::Success) // Warnings don't fail
     } else {
         Ok(ExitCode::Success)
     }
