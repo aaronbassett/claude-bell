@@ -48,18 +48,18 @@ cb setup
 ```
 
 This will:
-1. Create the configuration directory (`~/.config/claude-bell/`)
+1. Create the configuration directory (`~/.claude-bell/`)
 2. Create default configuration file
 3. Set up template and alias directories
 4. Verify notification permissions
 
 ## Configuration Directory
 
-Default location: `~/.config/claude-bell/`
+Default location: `~/.claude-bell/`
 
 Structure:
 ```
-~/.config/claude-bell/
+~/.claude-bell/
 ├── config.json        # Main configuration
 ├── templates/         # Custom templates
 │   └── templates.json
@@ -72,7 +72,7 @@ Structure:
 
 ## Configuration Options
 
-Edit `~/.config/claude-bell/config.json` or use `cb config set`:
+Edit `~/.claude-bell/config.json` or use `cb config set`:
 
 ```json
 {
@@ -128,7 +128,7 @@ Follow the interactive prompts to define your template.
 
 ### Manually
 
-Create or edit `~/.config/claude-bell/templates/templates.json`:
+Create or edit `~/.claude-bell/templates/templates.json`:
 
 ```json
 {
@@ -249,5 +249,5 @@ sudo cp target/release/cb /usr/local/bin/
 sudo rm /usr/local/bin/cb
 
 # Remove configuration (optional)
-rm -rf ~/.config/claude-bell
+rm -rf ~/.claude-bell
 ```
