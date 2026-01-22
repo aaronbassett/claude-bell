@@ -25,9 +25,7 @@ anyhow = "1"
 dirs = "5"
 tera = "1"
 sha2 = "0.10"
-objc2 = "0.5"
-objc2-foundation = { version = "0.2", features = ["all"] }
-block2 = "0.5"
+mac-notification-sys = "0.6"
 
 [dev-dependencies]
 tempfile = "3"
