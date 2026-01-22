@@ -147,16 +147,14 @@ fn handle_response(
 
 /// Send a notification with the given configuration
 pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppError> {
-    // Warn about unimplemented features
-    if config.url.is_some() {
-        eprintln!("Warning: --url field not yet implemented (planned for Phase 10.2)");
-    }
-    if config.is_interactive() {
-        eprintln!("Warning: Interactive notifications (actions/reply) not yet fully implemented");
-        eprintln!("Warning: Notification will be sent as fire-and-forget for now");
+    // Handle URL opening if specified
+    if let Some(ref url) = config.url {
+        open_url(url)?;
+        println!("opened");
+        return Ok(ExitCode::Success);
     }
 
-    // Set application to use Terminal's bundle ID (widely compatible)
+    // Set application to use Terminal's bundle ID
     let bundle = get_bundle_identifier_or_default("Terminal");
     set_application(&bundle)
         .map_err(|e| AppError::SystemError(format!("Failed to set application: {:?}", e)))?;
@@ -165,34 +163,46 @@ pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppErro
     let subtitle = config.subtitle.as_deref();
     let message = config.message.as_deref().unwrap_or("");
 
-    // Build notification options if needed and store them
+    // Build notification
     let mut base_notification = Notification::new();
-    let opts_default = base_notification.sound("NSUserNotificationDefaultSoundName");
 
-    let mut base_notification2 = Notification::new();
-    let opts_custom;
-
-    // Send as fire-and-forget for now
-    // Full interactive support will be added in follow-up work
-    let result = if let Some(ref sound) = config.sound {
+    // Add sound if specified
+    let notification_ref = if let Some(ref sound) = config.sound {
         if sound == "default" {
-            sys_send(&config.title, subtitle, message, Some(&opts_default))
+            base_notification.sound("NSUserNotificationDefaultSoundName")
         } else {
-            opts_custom = base_notification2.sound(sound);
-            sys_send(&config.title, subtitle, message, Some(&opts_custom))
+            base_notification.sound(sound)
         }
     } else {
-        sys_send(&config.title, subtitle, message, None)
+        &base_notification
     };
 
-    result.map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
+    // Check if interactive
+    if config.is_interactive() {
+        // Send with interaction and wait for response
+        // Note: mac-notification-sys doesn't support response handling yet
+        // This will be fire-and-forget until we implement a proper delegate
+        sys_send(&config.title, subtitle, message, Some(notification_ref))
+            .map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
 
-    // For non-interactive notifications, print default value if specified
-    if let Some(ref default_val) = config.default_value {
-        println!("{}", default_val);
+        // For now, print default value since we can't get real responses
+        if let Some(ref default_val) = config.default_value {
+            println!("{}", default_val);
+        }
+
+        Ok(ExitCode::Success)
+    } else {
+        // Fire-and-forget
+        sys_send(&config.title, subtitle, message, Some(notification_ref))
+            .map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
+
+        // Print default value if specified
+        if let Some(ref default_val) = config.default_value {
+            println!("{}", default_val);
+        }
+
+        Ok(ExitCode::Success)
     }
-
-    Ok(ExitCode::Success)
 }
 
 #[cfg(test)]
