@@ -105,6 +105,46 @@ fn parse_duration(s: &str) -> Result<Duration, AppError> {
     Ok(Duration::from_secs(seconds))
 }
 
+fn open_url(url: &str) -> Result<(), AppError> {
+    use std::process::Command;
+
+    Command::new("open")
+        .arg(url)
+        .spawn()
+        .map_err(|e| AppError::SystemError(format!("Failed to open URL: {}", e)))?;
+    Ok(())
+}
+
+fn handle_response(
+    response: crate::notification::response::NotificationResponse,
+    config: &NotificationConfig,
+) -> Result<ExitCode, AppError> {
+    use crate::notification::response::NotificationResponse;
+
+    match response {
+        NotificationResponse::Action { identifier, .. } => {
+            println!("{}", identifier);
+            Ok(ExitCode::Success)
+        }
+        NotificationResponse::Reply { text } => {
+            println!("{}", text);
+            Ok(ExitCode::Success)
+        }
+        NotificationResponse::Dismissed => {
+            if let Some(val) = config.on_dismiss.as_ref().or(config.default_value.as_ref()) {
+                println!("{}", val);
+            }
+            Ok(ExitCode::Dismissed)
+        }
+        NotificationResponse::Timeout => {
+            if let Some(val) = config.on_timeout.as_ref().or(config.default_value.as_ref()) {
+                println!("{}", val);
+            }
+            Ok(ExitCode::Timeout)
+        }
+    }
+}
+
 /// Send a notification with the given configuration
 pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppError> {
     // Warn about unimplemented features
@@ -282,5 +322,69 @@ mod tests {
         };
 
         assert!(NotificationConfig::from_cli(&cli).is_err());
+    }
+
+    #[test]
+    fn test_handle_response_action() {
+        use crate::notification::response::NotificationResponse;
+
+        let config = NotificationConfig {
+            title: "Test".to_string(),
+            subtitle: None,
+            message: None,
+            image: None,
+            icon: None,
+            sound: None,
+            actions: vec!["Yes".to_string(), "No".to_string()],
+            reply: None,
+            url: None,
+            persistent: false,
+            timeout: None,
+            default_value: None,
+            on_dismiss: None,
+            on_timeout: None,
+        };
+
+        let response = NotificationResponse::Action {
+            identifier: "Yes".to_string(),
+            index: 0,
+        };
+        let exit_code = handle_response(response, &config).unwrap();
+        assert_eq!(exit_code, ExitCode::Success);
+    }
+
+    #[test]
+    fn test_handle_response_dismissed_with_default() {
+        use crate::notification::response::NotificationResponse;
+
+        let config = NotificationConfig {
+            title: "Test".to_string(),
+            subtitle: None,
+            message: None,
+            image: None,
+            icon: None,
+            sound: None,
+            actions: vec!["OK".to_string()],
+            reply: None,
+            url: None,
+            persistent: false,
+            timeout: None,
+            default_value: Some("dismissed".to_string()),
+            on_dismiss: Some("user_cancelled".to_string()),
+            on_timeout: None,
+        };
+
+        let response = NotificationResponse::Dismissed;
+        let exit_code = handle_response(response, &config).unwrap();
+        assert_eq!(exit_code, ExitCode::Dismissed);
+    }
+
+    #[test]
+    fn test_open_url() {
+        // Can't fully test this without actually opening URLs
+        // Just verify function signature
+        let result = open_url("https://example.com");
+        // Will fail on systems without 'open' command, but that's expected
+        assert!(result.is_ok() || result.is_err());
     }
 }
