@@ -143,11 +143,102 @@ pub enum TemplateCommands {
     /// List all templates
     List,
     /// Show a template
-    Show { name: String },
+    Show {
+        name: String,
+        /// Render with variables instead of showing raw template
+        #[arg(long)]
+        render: bool,
+    },
     /// Create a new template
-    Create,
+    Create {
+        /// Template name (required for non-interactive)
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Title (required for non-interactive)
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Subtitle
+        #[arg(long)]
+        subtitle: Option<String>,
+
+        /// Message
+        #[arg(long)]
+        message: Option<String>,
+
+        /// Sound
+        #[arg(long)]
+        sound: Option<String>,
+
+        /// Icon
+        #[arg(long)]
+        icon: Option<String>,
+
+        /// Actions (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        actions: Option<Vec<String>>,
+
+        /// Reply placeholder
+        #[arg(long)]
+        reply: Option<String>,
+
+        /// URL
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Persistent
+        #[arg(long)]
+        persistent: bool,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Update an existing template
-    Update { name: String },
+    Update {
+        name: String,
+
+        /// Title
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Subtitle
+        #[arg(long)]
+        subtitle: Option<String>,
+
+        /// Message
+        #[arg(long)]
+        message: Option<String>,
+
+        /// Sound
+        #[arg(long)]
+        sound: Option<String>,
+
+        /// Icon
+        #[arg(long)]
+        icon: Option<String>,
+
+        /// Actions (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        actions: Option<Vec<String>>,
+
+        /// Reply placeholder
+        #[arg(long)]
+        reply: Option<String>,
+
+        /// URL
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Persistent
+        #[arg(long)]
+        persistent: Option<bool>,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Delete a template
     Delete { name: String },
     /// Validate templates
