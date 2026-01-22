@@ -62,6 +62,16 @@ mod tests {
         assert_eq!(detect_source_type("/path/to/file.jpg"), SourceType::Image);
         assert_eq!(detect_source_type("/path/to/file.jpeg"), SourceType::Image);
     }
+
+    #[test]
+    fn test_generate_info_plist() {
+        let plist = generate_info_plist("test-icon");
+        assert!(plist.contains("com.claude-bell.icon.test-icon"));
+        assert!(plist.contains("<key>CFBundleName</key>"));
+        assert!(plist.contains("<string>test-icon</string>"));
+        assert!(plist.contains("<key>CFBundleIconFile</key>"));
+        assert!(plist.contains("<string>icon</string>"));
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -80,6 +90,21 @@ fn detect_source_type(path: &str) -> SourceType {
     } else {
         SourceType::Image
     }
+}
+
+fn generate_info_plist(alias: &str) -> String {
+    format!(r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.claude-bell.icon.{}</string>
+    <key>CFBundleName</key>
+    <string>{}</string>
+    <key>CFBundleIconFile</key>
+    <string>icon</string>
+</dict>
+</plist>"#, alias, alias)
 }
 
 /// Add an icon alias (from app or image path)
