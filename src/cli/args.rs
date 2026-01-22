@@ -305,7 +305,19 @@ pub enum ConfigCommands {
         pretty: bool,
     },
     /// Set a configuration value
-    Set { key: String, value: String },
+    Set {
+        /// Key path (e.g., defaults.sound)
+        #[arg(required_unless_present = "json")]
+        key: Option<String>,
+
+        /// Value to set
+        #[arg(required_unless_present = "json")]
+        value: Option<String>,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Unset a configuration value
     Unset { key: String },
     /// Reset configuration to defaults
