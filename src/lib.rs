@@ -12,11 +12,11 @@ use clap::Parser;
 pub use cli::Cli;
 pub use error::{AppError, ExitCode};
 
-pub fn run() -> Result<()> {
+pub fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
 
     // For now, just print what we parsed
     println!("{:?}", cli);
 
-    Ok(())
+    Ok(ExitCode::Success)
 }
