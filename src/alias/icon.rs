@@ -257,7 +257,8 @@ pub fn resolve_icon(icon: &str) -> Result<Option<String>, AppError> {
     if let Some(alias) = icon.strip_prefix('@') {
         // Check if it's a bundled icon
         if BUNDLED_ICONS.contains(&alias) {
-            // TODO: Return path to bundled icon
+            // For bundled icons, return the alias format
+            // The notification system will handle bundled icon resolution
             return Ok(Some(format!("@{}", alias)));
         }
 
