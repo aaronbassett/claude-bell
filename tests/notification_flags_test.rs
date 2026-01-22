@@ -6,6 +6,7 @@ use predicates::prelude::*;
 // Without title: Shows "Use --help for usage information"
 
 #[test]
+#[ignore = "Requires macOS notification system (can't run in CI)"]
 fn test_title_flag_short() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args(["-t", "Test Title"])
@@ -15,6 +16,7 @@ fn test_title_flag_short() {
 }
 
 #[test]
+#[ignore = "Requires macOS notification system (can't run in CI)"]
 fn test_title_flag_long() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args(["--title", "Test Title"])
@@ -24,6 +26,7 @@ fn test_title_flag_long() {
 }
 
 #[test]
+#[ignore = "Requires macOS notification system (can't run in CI)"]
 fn test_multiple_content_flags() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args(["-t", "Title", "-s", "Subtitle", "-m", "Message"])
@@ -43,6 +46,7 @@ fn test_flags_without_title_show_help() {
 }
 
 #[test]
+#[ignore = "Requires macOS notification system (can't run in CI)"]
 fn test_notification_with_all_content_flags() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args([
@@ -63,6 +67,7 @@ fn test_notification_with_all_content_flags() {
 }
 
 #[test]
+#[ignore = "Requires macOS notification system (can't run in CI)"]
 fn test_short_flags_combined() {
     let mut cmd = Command::cargo_bin("cb").unwrap();
     cmd.args([

@@ -3,6 +3,7 @@
 pub mod config;
 pub mod doctor;
 pub mod icon;
+pub mod setup;
 pub mod sound;
 pub mod template;
 
@@ -81,11 +82,7 @@ pub fn dispatch(cli: &Cli) -> Result<ExitCode> {
         Some(Commands::Sound { action }) => sound::handle(action),
         Some(Commands::Icon { action }) => icon::handle(action),
         Some(Commands::Config { action }) => config::handle(action),
-        Some(Commands::Setup) => {
-            println!("Running setup wizard...");
-            // TODO: Implement setup wizard
-            Ok(ExitCode::Success)
-        }
+        Some(Commands::Setup) => setup::run_setup_wizard(),
         Some(Commands::Doctor) => doctor::handle(),
         None => {
             // No subcommand - send notification or apply template

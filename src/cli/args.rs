@@ -143,11 +143,102 @@ pub enum TemplateCommands {
     /// List all templates
     List,
     /// Show a template
-    Show { name: String },
+    Show {
+        name: String,
+        /// Render with variables instead of showing raw template
+        #[arg(long)]
+        render: bool,
+    },
     /// Create a new template
-    Create,
+    Create {
+        /// Template name (required for non-interactive)
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Title (required for non-interactive)
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Subtitle
+        #[arg(long)]
+        subtitle: Option<String>,
+
+        /// Message
+        #[arg(long)]
+        message: Option<String>,
+
+        /// Sound
+        #[arg(long)]
+        sound: Option<String>,
+
+        /// Icon
+        #[arg(long)]
+        icon: Option<String>,
+
+        /// Actions (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        actions: Option<Vec<String>>,
+
+        /// Reply placeholder
+        #[arg(long)]
+        reply: Option<String>,
+
+        /// URL
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Persistent
+        #[arg(long)]
+        persistent: bool,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Update an existing template
-    Update { name: String },
+    Update {
+        name: String,
+
+        /// Title
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Subtitle
+        #[arg(long)]
+        subtitle: Option<String>,
+
+        /// Message
+        #[arg(long)]
+        message: Option<String>,
+
+        /// Sound
+        #[arg(long)]
+        sound: Option<String>,
+
+        /// Icon
+        #[arg(long)]
+        icon: Option<String>,
+
+        /// Actions (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        actions: Option<Vec<String>>,
+
+        /// Reply placeholder
+        #[arg(long)]
+        reply: Option<String>,
+
+        /// URL
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Persistent
+        #[arg(long)]
+        persistent: Option<bool>,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Delete a template
     Delete { name: String },
     /// Validate templates
@@ -178,8 +269,16 @@ pub enum SoundCommands {
     },
     /// Prune orphaned sounds
     Prune {
-        /// What to prune: files, aliases, or both
+        /// What to prune: all (default), files, aliases
         target: Option<String>,
+
+        /// Preview changes without executing
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long, short = 'y')]
+        yes: bool,
     },
     /// Check sound alias health
     Doctor,
@@ -199,8 +298,16 @@ pub enum IconCommands {
     },
     /// Prune orphaned icons
     Prune {
-        /// What to prune: bundles, aliases, or both
+        /// What to prune: all (default), bundles, aliases
         target: Option<String>,
+
+        /// Preview changes without executing
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long, short = 'y')]
+        yes: bool,
     },
     /// Check icon alias health
     Doctor,
@@ -214,7 +321,19 @@ pub enum ConfigCommands {
         pretty: bool,
     },
     /// Set a configuration value
-    Set { key: String, value: String },
+    Set {
+        /// Key path (e.g., defaults.sound)
+        #[arg(required_unless_present = "json")]
+        key: Option<String>,
+
+        /// Value to set
+        #[arg(required_unless_present = "json")]
+        value: Option<String>,
+
+        /// Read JSON from stdin
+        #[arg(long)]
+        json: bool,
+    },
     /// Unset a configuration value
     Unset { key: String },
     /// Reset configuration to defaults

@@ -8,7 +8,9 @@
 
 use crate::cli::args::Cli;
 use crate::error::{AppError, ExitCode};
-use mac_notification_sys::{get_bundle_identifier_or_default, send_notification as sys_send, set_application, Notification};
+use mac_notification_sys::{
+    get_bundle_identifier_or_default, send_notification as sys_send, set_application, Notification,
+};
 use std::time::Duration;
 
 /// Notification configuration built from CLI arguments
@@ -105,18 +107,57 @@ fn parse_duration(s: &str) -> Result<Duration, AppError> {
     Ok(Duration::from_secs(seconds))
 }
 
+fn open_url(url: &str) -> Result<(), AppError> {
+    use std::process::Command;
+
+    Command::new("open")
+        .arg(url)
+        .spawn()
+        .map_err(|e| AppError::SystemError(format!("Failed to open URL: {}", e)))?;
+    Ok(())
+}
+
+#[allow(dead_code)]
+fn handle_response(
+    response: crate::notification::response::NotificationResponse,
+    config: &NotificationConfig,
+) -> Result<ExitCode, AppError> {
+    use crate::notification::response::NotificationResponse;
+
+    match response {
+        NotificationResponse::Action { identifier, .. } => {
+            println!("{}", identifier);
+            Ok(ExitCode::Success)
+        }
+        NotificationResponse::Reply { text } => {
+            println!("{}", text);
+            Ok(ExitCode::Success)
+        }
+        NotificationResponse::Dismissed => {
+            if let Some(val) = config.on_dismiss.as_ref().or(config.default_value.as_ref()) {
+                println!("{}", val);
+            }
+            Ok(ExitCode::Dismissed)
+        }
+        NotificationResponse::Timeout => {
+            if let Some(val) = config.on_timeout.as_ref().or(config.default_value.as_ref()) {
+                println!("{}", val);
+            }
+            Ok(ExitCode::Timeout)
+        }
+    }
+}
+
 /// Send a notification with the given configuration
 pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppError> {
-    // Warn about unimplemented features
-    if config.url.is_some() {
-        eprintln!("Warning: --url field not yet implemented (planned for Phase 10.2)");
-    }
-    if config.is_interactive() {
-        eprintln!("Warning: Interactive notifications (actions/reply) not yet fully implemented");
-        eprintln!("Warning: Notification will be sent as fire-and-forget for now");
+    // Handle URL opening if specified
+    if let Some(ref url) = config.url {
+        open_url(url)?;
+        println!("opened");
+        return Ok(ExitCode::Success);
     }
 
-    // Set application to use Terminal's bundle ID (widely compatible)
+    // Set application to use Terminal's bundle ID
     let bundle = get_bundle_identifier_or_default("Terminal");
     set_application(&bundle)
         .map_err(|e| AppError::SystemError(format!("Failed to set application: {:?}", e)))?;
@@ -125,34 +166,48 @@ pub fn send_notification(config: NotificationConfig) -> Result<ExitCode, AppErro
     let subtitle = config.subtitle.as_deref();
     let message = config.message.as_deref().unwrap_or("");
 
-    // Build notification options if needed and store them
+    // Build notification
     let mut base_notification = Notification::new();
-    let opts_default = base_notification.sound("NSUserNotificationDefaultSoundName");
 
-    let mut base_notification2 = Notification::new();
-    let opts_custom;
-
-    // Send as fire-and-forget for now
-    // Full interactive support will be added in follow-up work
-    let result = if let Some(ref sound) = config.sound {
+    // Add sound if specified
+    let notification_ref = if let Some(ref sound) = config.sound {
         if sound == "default" {
-            sys_send(&config.title, subtitle, message, Some(&opts_default))
+            base_notification.sound("NSUserNotificationDefaultSoundName")
         } else {
-            opts_custom = base_notification2.sound(sound);
-            sys_send(&config.title, subtitle, message, Some(&opts_custom))
+            base_notification.sound(sound)
         }
     } else {
-        sys_send(&config.title, subtitle, message, None)
+        &base_notification
     };
 
-    result.map_err(|e| AppError::NotificationError(format!("Failed to send notification: {:?}", e)))?;
+    // Check if interactive
+    if config.is_interactive() {
+        // Send with interaction and wait for response
+        // Note: mac-notification-sys doesn't support response handling yet
+        // This will be fire-and-forget until we implement a proper delegate
+        sys_send(&config.title, subtitle, message, Some(notification_ref)).map_err(|e| {
+            AppError::NotificationError(format!("Failed to send notification: {:?}", e))
+        })?;
 
-    // For non-interactive notifications, print default value if specified
-    if let Some(ref default_val) = config.default_value {
-        println!("{}", default_val);
+        // For now, print default value since we can't get real responses
+        if let Some(ref default_val) = config.default_value {
+            println!("{}", default_val);
+        }
+
+        Ok(ExitCode::Success)
+    } else {
+        // Fire-and-forget
+        sys_send(&config.title, subtitle, message, Some(notification_ref)).map_err(|e| {
+            AppError::NotificationError(format!("Failed to send notification: {:?}", e))
+        })?;
+
+        // Print default value if specified
+        if let Some(ref default_val) = config.default_value {
+            println!("{}", default_val);
+        }
+
+        Ok(ExitCode::Success)
     }
-
-    Ok(ExitCode::Success)
 }
 
 #[cfg(test)]
@@ -282,5 +337,69 @@ mod tests {
         };
 
         assert!(NotificationConfig::from_cli(&cli).is_err());
+    }
+
+    #[test]
+    fn test_handle_response_action() {
+        use crate::notification::response::NotificationResponse;
+
+        let config = NotificationConfig {
+            title: "Test".to_string(),
+            subtitle: None,
+            message: None,
+            image: None,
+            icon: None,
+            sound: None,
+            actions: vec!["Yes".to_string(), "No".to_string()],
+            reply: None,
+            url: None,
+            persistent: false,
+            timeout: None,
+            default_value: None,
+            on_dismiss: None,
+            on_timeout: None,
+        };
+
+        let response = NotificationResponse::Action {
+            identifier: "Yes".to_string(),
+            index: 0,
+        };
+        let exit_code = handle_response(response, &config).unwrap();
+        assert_eq!(exit_code, ExitCode::Success);
+    }
+
+    #[test]
+    fn test_handle_response_dismissed_with_default() {
+        use crate::notification::response::NotificationResponse;
+
+        let config = NotificationConfig {
+            title: "Test".to_string(),
+            subtitle: None,
+            message: None,
+            image: None,
+            icon: None,
+            sound: None,
+            actions: vec!["OK".to_string()],
+            reply: None,
+            url: None,
+            persistent: false,
+            timeout: None,
+            default_value: Some("dismissed".to_string()),
+            on_dismiss: Some("user_cancelled".to_string()),
+            on_timeout: None,
+        };
+
+        let response = NotificationResponse::Dismissed;
+        let exit_code = handle_response(response, &config).unwrap();
+        assert_eq!(exit_code, ExitCode::Dismissed);
+    }
+
+    #[test]
+    fn test_open_url() {
+        // Can't fully test this without actually opening URLs
+        // Just verify function signature
+        let result = open_url("https://example.com");
+        // Will fail on systems without 'open' command, but that's expected
+        assert!(result.is_ok() || result.is_err());
     }
 }

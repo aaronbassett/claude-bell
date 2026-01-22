@@ -26,6 +26,7 @@ dirs = "5"
 tera = "1"
 sha2 = "0.10"
 mac-notification-sys = "0.6"
+dialoguer = "0.11"
 
 [dev-dependencies]
 tempfile = "3"

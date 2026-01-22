@@ -43,7 +43,10 @@ impl NotificationResponse {
         on_timeout: &Option<String>,
     ) -> String {
         match self {
-            Self::Action { identifier, index: _ } => {
+            Self::Action {
+                identifier,
+                index: _,
+            } => {
                 // For actions, return the identifier or index
                 identifier.clone()
             }
