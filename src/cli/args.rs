@@ -269,8 +269,16 @@ pub enum SoundCommands {
     },
     /// Prune orphaned sounds
     Prune {
-        /// What to prune: files, aliases, or both
+        /// What to prune: all (default), files, aliases
         target: Option<String>,
+
+        /// Preview changes without executing
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long, short = 'y')]
+        yes: bool,
     },
     /// Check sound alias health
     Doctor,
@@ -290,8 +298,16 @@ pub enum IconCommands {
     },
     /// Prune orphaned icons
     Prune {
-        /// What to prune: bundles, aliases, or both
+        /// What to prune: all (default), bundles, aliases
         target: Option<String>,
+
+        /// Preview changes without executing
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip confirmation prompt
+        #[arg(long, short = 'y')]
+        yes: bool,
     },
     /// Check icon alias health
     Doctor,
