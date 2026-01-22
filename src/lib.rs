@@ -1,10 +1,13 @@
+//! claude-bell - macOS notifications for Claude Code
+
+pub mod alias;
 pub mod cli;
+pub mod commands;
 pub mod config;
+pub mod doctor;
 pub mod error;
 pub mod notification;
 pub mod template;
-pub mod alias;
-pub mod doctor;
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,11 +15,8 @@ use clap::Parser;
 pub use cli::Cli;
 pub use error::{AppError, ExitCode};
 
+/// Run the application with parsed CLI arguments
 pub fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
-
-    // For now, just print what we parsed
-    println!("{:?}", cli);
-
-    Ok(ExitCode::Success)
+    commands::dispatch(&cli)
 }
