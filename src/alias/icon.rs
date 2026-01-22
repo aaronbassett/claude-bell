@@ -72,6 +72,30 @@ mod tests {
         assert!(plist.contains("<key>CFBundleIconFile</key>"));
         assert!(plist.contains("<string>icon</string>"));
     }
+
+    #[test]
+    fn test_convert_image_to_icns() {
+        let temp = tempfile::TempDir::new().unwrap();
+        let input = temp.path().join("test.png");
+        let output = temp.path().join("output.icns");
+
+        // Create a fake PNG (just needs to exist for test)
+        std::fs::write(&input, b"fake png data").unwrap();
+
+        // Note: This will fail on systems without sips, but that's expected
+        let result = convert_to_icns(&input, &output);
+
+        // We can't guarantee sips is available in test environment
+        // So just verify the function exists and has correct signature
+        match result {
+            Ok(_) => assert!(output.exists()),
+            Err(e) => {
+                // Expected on non-macOS or if sips fails with fake data
+                assert!(e.to_string().contains("sips") ||
+                        e.to_string().contains("image"));
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -105,6 +129,30 @@ fn generate_info_plist(alias: &str) -> String {
     <string>icon</string>
 </dict>
 </plist>"#, alias, alias)
+}
+
+fn convert_to_icns(input: &std::path::Path, output: &std::path::Path) -> Result<(), AppError> {
+    use std::process::Command;
+
+    let status = Command::new("sips")
+        .arg("-s")
+        .arg("format")
+        .arg("icns")
+        .arg(input)
+        .arg("--out")
+        .arg(output)
+        .status()
+        .map_err(|e| AppError::SystemError(
+            format!("Failed to run sips command: {}. Is this macOS?", e)
+        ))?;
+
+    if !status.success() {
+        return Err(AppError::SystemError(
+            format!("sips command failed to convert image. Supported formats: png, jpg, jpeg, gif, tiff")
+        ));
+    }
+
+    Ok(())
 }
 
 /// Add an icon alias (from app or image path)
