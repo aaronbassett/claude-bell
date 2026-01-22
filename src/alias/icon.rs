@@ -167,12 +167,48 @@ pub fn add_icon_alias(alias: &str, path: &str) -> Result<(), AppError> {
         )));
     }
 
-    // For now, just store the path - bundle generation will be implemented
-    // when we add macOS notification support
     let bundle_name = format!("{}.app", alias);
+    let bundle_path = icon_bundles_dir().join(&bundle_name);
 
-    // TODO: Generate app bundle from source (app or image)
-    // For now, store a reference
+    // Create bundle directory structure
+    std::fs::create_dir_all(&bundle_path)?;
+    let contents_dir = bundle_path.join("Contents");
+    let resources_dir = contents_dir.join("Resources");
+    std::fs::create_dir_all(&resources_dir)?;
+
+    // Generate and write Info.plist
+    let plist_content = generate_info_plist(alias);
+    std::fs::write(contents_dir.join("Info.plist"), plist_content)?;
+
+    // Handle icon based on source type
+    let source_type = detect_source_type(path);
+    let icon_dest = resources_dir.join("icon.icns");
+
+    match source_type {
+        SourceType::AppBundle => {
+            // Copy the app bundle's icon if it exists
+            let source_resources = source_path.join("Contents/Resources");
+            if let Ok(entries) = std::fs::read_dir(source_resources) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("icns") {
+                        std::fs::copy(&path, &icon_dest)?;
+                        break;
+                    }
+                }
+            }
+        }
+        SourceType::Icns => {
+            // Copy ICNS file directly
+            std::fs::copy(source_path, &icon_dest)?;
+        }
+        SourceType::Image => {
+            // Convert image to ICNS
+            convert_to_icns(source_path, &icon_dest)?;
+        }
+    }
+
+    // Update aliases
     aliases.aliases.insert(alias.to_string(), bundle_name);
     save_icon_aliases(&aliases)?;
     Ok(())
